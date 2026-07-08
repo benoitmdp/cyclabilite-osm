@@ -15,7 +15,7 @@ Le script `extract_territories.py` réalise les étapes suivantes :
 
 ### Prérequis
 - `osmium-tool` installé sur votre système.
-- Environnement Python avec `geopandas` et `shapely`.
+- Environnement Python tel que proposé dans environment.yml
 
 
 ### 📥 Préparation des données
@@ -25,6 +25,21 @@ Pour exécuter le pipeline d'extraction, vous devez fournir les données sources
 2. **Emplacement** : Placez ce fichier dans le dossier `data/raw/` à la racine du projet.
 3. **Configuration** : Vérifiez que le nom du fichier correspond à celui défini dans votre script (ou mettez à jour la variable `INPUT_PBF` dans `extract_territories.py`).
 
+### 🚀 Lancement de l'extraction
+Une fois l'environnement activé, lancez le script d'extraction des territoires :
+
+```bash
+python src/extract/extract_territories.py
+```
+
+---
+
+## 🇬🇧 English
+
+This module extracts administrative boundaries and road network data for the **Greater Paris Metropolis (Métropole du Grand Paris)** from historical OpenStreetMap (Geofabrik) datasets.
+
+### Workflow
+The `extract_territories.py` 
 
 ---
 
