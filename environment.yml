@@ -1,0 +1,23 @@
+name: mgp-cyclability-env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  # Base de calcul et manipulation de données
+  - pandas
+  - numpy
+  - geopandas
+  - shapely
+  # Visualisation et widgets
+  - folium
+  - ipywidgets
+  # Outils système et formats de données
+  - osmium-tool
+  - gdal
+  - pyproj
+  - fiona
+  - requests
+  - pip:
+      - ipython
