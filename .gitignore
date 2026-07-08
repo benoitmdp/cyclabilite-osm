@@ -216,3 +216,15 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- Projet MGP Extraction ---
+# Données sources (Geofabrik)
+data/raw/*.pbf
+data/raw/*.osh
+
+# Résultats générés (GeoJSON lourds)
+data/processed/*.geojson
+
+# Autres fichiers temporaires potentiels
+temp_*.osm.pbf
+temp_*.geojson
