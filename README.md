@@ -1,6 +1,12 @@
 # 🚲 OSM Cyclability Scoring
 
+![License](https://img.shields.io/badge/license-EUPL%201.2-blue)
+tps://img.shields.io/badge/python-3en
+![OpenStreetMap](https://img/data-OpenStreetMap-orange
+
 An open-source methodology for assessing bicycle network quality from OpenStreetMap data.
+
+## Screenshot
 
 docs/capture.png
 
