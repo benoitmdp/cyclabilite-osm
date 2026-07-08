@@ -1,212 +1,61 @@
 # 🚲 OSM Cyclability Scoring
 
-![License](https://img.shields.io/badge/license-EUPL%201.2-blue)
-tps://img.shields.io/badge/python-3en
-![OpenStreetMap](https://img/data-OpenStreetMap-orange
+![License](https://img.shields.io/badge/license-MIT-blue)
+![Python](https://img.shields.io/badge/python-3.10%2B-green)
+![OpenStreetMap](https://img.shields.io/badge/data-OpenStreetMap-orange)
 
-An open-source methodology for assessing bicycle network quality from OpenStreetMap data.
-
-## Screenshot
-
-docs/capture.png
+*An open-source methodology for assessing bicycle network quality.*
 
 ---
+
+## 📸 Overview
+
+![Screenshot](docs/capture.png)
 
 ## English
 
-### Overview
-
-OSM Cyclability Scoring is an open-source methodology and toolkit for assessing bicycle-friendliness from OpenStreetMap data.
-
-The project computes a cyclability score for each road segment by combining:
-
-- road hierarchy;
-- cycling infrastructure (cycle tracks, cycle lanes, greenways and cycle streets);
-- traffic direction and contraflow cycling;
-- dual carriageway detection;
-- spatial proximity analysis between roads and cycling facilities.
-
-The resulting scores can be used for:
-
-- monitoring cycling networks;
-- infrastructure planning;
-- territorial benchmarking;
-- open-data publication;
-- interactive web mapping.
-
----
-
-### Main Features
-
-✅ Automatic analysis of OpenStreetMap road networks
-
-✅ Detection of cycling infrastructure
-
-✅ Contraflow cycling assessment
-
-✅ Dual carriageway detection
-
-✅ Segment-level cyclability scoring
-
-✅ GeoParquet exports
-
-✅ Interactive comparative web maps
-
----
-
-### Technology Stack
-
-- Python
-- GeoPandas
-- Shapely
-- Pandas
-- Folium
-- Jupyter Notebooks
-
----
-
-### Input Data
-
-The methodology is designed to work with OpenStreetMap extracts converted to GeoParquet format.
-
----
-
-### Output Data
-
-The tool produces:
-
-- cyclability scores for road segments;
-- GeoParquet datasets;
-- interactive HTML maps for exploration and comparison.
-
----
-
-### Intended Users
-
-This project is intended for:
-
-- local authorities;
-- metropolitan governments;
-- transport agencies;
-- urban planners;
-- researchers;
-- OpenStreetMap contributors.
-
----
-
-### License
-
-This project is distributed under the MIT License.
-
----
 
 ## 🇫🇷 Français
 
 ### Présentation
+**OSM Cyclability Scoring** est une méthodologie et un ensemble d'outils open source permettant d'évaluer la qualité des infrastructures cyclables à partir des données **OpenStreetMap**. 
 
-Cyclabilité OSM est une méthodologie et un ensemble d'outils open source permettant d'évaluer les conditions de circulation à vélo à partir des données OpenStreetMap.
-
-Le projet calcule un score de cyclabilité pour chaque segment de voirie en prenant notamment en compte :
-
-- la hiérarchie du réseau routier ;
-- les aménagements cyclables (pistes, bandes, voies vertes et vélorues) ;
-- les sens de circulation ;
-- les doubles sens cyclables ;
-- la détection des chaussées séparées ;
-- l'analyse spatiale de proximité entre les rues et les aménagements cyclables.
-
-Les scores obtenus peuvent être utilisés pour :
-
-- le suivi des réseaux cyclables ;
-- la planification des infrastructures ;
-- les comparaisons territoriales ;
-- la publication de données ouvertes ;
-- la création de cartes interactives.
-
----
+Initialement développé pour analyser le réseau de la **Métropole du Grand Paris**, cet outil permet de qualifier finement chaque segment de voirie pour aider à la planification et au suivi du développement du vélo.
 
 ### Fonctionnalités principales
-
-✅ Analyse automatique des données OpenStreetMap
-
-✅ Détection des aménagements cyclables
-
-✅ Évaluation des doubles sens cyclables
-
-✅ Détection des chaussées séparées
-
-✅ Calcul d'un score de cyclabilité par segment
-
-✅ Export GeoParquet
-
-✅ Cartographie web comparative interactive
-
----
-
-### Technologies utilisées
-
-- Python
-- GeoPandas
-- Shapely
-- Pandas
-- Folium
-- Jupyter Notebooks
-
----
-
-### Données d'entrée
-
-La méthode s'appuie sur des données OpenStreetMap converties au format GeoParquet.
-
----
-
-### Données produites
-
-Le projet génère :
-
-- un score de cyclabilité par segment de voirie ;
-- des jeux de données GeoParquet ;
-- des cartes HTML interactives permettant l'exploration et la comparaison temporelle des résultats.
-
----
+- ✅ **Analyse automatisée** des réseaux routiers OSM.
+- ✅ **Détection intelligente** des aménagements (pistes, bandes, voies vertes, vélorues).
+- ✅ **Analyse avancée** : doubles sens cyclables, chaussées séparées, analyse de proximité spatiale.
+- ✅ **Sorties exploitables** : scores par segment, exports GeoParquet, cartes interactives HTML.
 
 ### Public visé
-
-Ce projet s'adresse notamment :
-
-- aux collectivités territoriales ;
-- aux métropoles ;
-- aux autorités organisatrices de mobilité ;
-- aux urbanistes ;
-- aux chercheurs ;
-- à la communauté OpenStreetMap.
+Ce projet s'adresse aux collectivités, métropoles, autorités de mobilité, urbanistes, chercheurs et contributeurs OpenStreetMap souhaitant évaluer leur territoire de manière objective.
 
 ---
 
-### Licence
+## 🇬🇧 English
 
-Ce projet est distribué sous licence MIT
+### Overview
+**OSM Cyclability Scoring** is an open-source methodology and toolkit designed to assess bicycle-friendliness using **OpenStreetMap** data.
 
----
+Designed and refined for the **Greater Paris Metropolis (Métropole du Grand Paris)**, this project computes cyclability scores for road segments by integrating road hierarchy, dedicated cycling infrastructure, contraflow cycling, and spatial proximity analysis.
 
-## Example Workflow
+### Main Features
+- ✅ **Automatic analysis** of OSM road networks.
+- ✅ **Infrastructure detection** (tracks, lanes, greenways, cycle streets).
+- ✅ **Advanced metrics**: contraflow assessment, dual carriageway detection, spatial proximity.
+- ✅ **Actionable outputs**: segment-level scoring, GeoParquet datasets, and interactive web maps.
 
-```text
-OpenStreetMap
-      ↓
-GeoParquet conversion
-      ↓
-Cyclability scoring
-      ↓
-GeoParquet exports
-      ↓
-Interactive HTML maps
-```
+### Intended Users
+The project serves local authorities, metropolitan governments, transport agencies, urban planners, researchers, and OpenStreetMap contributors interested in data-driven cycle network assessment.
 
 ---
 
-## Author
+## 🛠 Workflow
 
-Developed by Benoît Chaumeret - Mission vélo - Ville de Paris.
-
-Contributions, suggestions and feedback are welcome.
+```mermaid
+graph TD
+    A[OpenStreetMap Data] --> B[GeoParquet Conversion]
+    B --> C[Cyclability Scoring Engine]
+    C --> D[GeoParquet Exports]
+    C --> E[Interactive HTML Maps]
