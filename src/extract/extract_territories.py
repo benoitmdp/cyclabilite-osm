@@ -1,102 +1,124 @@
 #code pour extraire les périmètres des territoires qui nous intéressent par la suite
 
-import os
-import sys
-import subprocess
+import os, sys, subprocess
+from datetime import datetime
 import geopandas as gpd
 import pandas as pd
 
-# 1. Localisation dynamique de l'exécutable osmium
-# Sous Conda, il est dans le dossier Library\bin de l'environnement
-osmium_exe = os.path.join(sys.prefix, 'Library', 'bin', 'osmium.exe')
-
-# Vérification manuelle
-if not os.path.exists(osmium_exe):
-    raise FileNotFoundError(f"Impossible de trouver osmium à cet emplacement : {osmium_exe}")
-
-print(f"Osmium localisé avec succès : {osmium_exe}")
-
-# Chemins
+# -------------------------------------------------------------
+# Détection Jupyter
+# -------------------------------------------------------------
 try:
-    # Si exécuté dans un script .py
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-except NameError:
-    # Si exécuté dans un Notebook, utilise le dossier de travail courant
-    BASE_DIR = os.getcwd()
-INPUT_PBF = os.path.join(BASE_DIR, "ile-de-france-internal.osh.pbf")
-SNAPSHOT = os.path.join(BASE_DIR, "temp_snapshot.osm.pbf")
-EXPORT_OSM = os.path.join(BASE_DIR, "temp_export.osm.pbf")
-EXPORT_GEOJSON = os.path.join(BASE_DIR, "temp_export.geojson")
+    from IPython.display import display, clear_output
+    import ipywidgets as widgets
+    JUPYTER = True
+except ImportError:
+    JUPYTER = False
 
-TERRITOIRES_FILE = os.path.join(BASE_DIR, "territoires_mgp.geojson")
-COMMUNES_FILE = os.path.join(BASE_DIR, "communes_arrondissements.geojson")
+# -------------------------------------------------------------
+# Configuration
+# -------------------------------------------------------------
+conda_prefix = sys.prefix
+osmium_exe = os.path.join(conda_prefix, "Library", "bin", "osmium.exe")
+if not os.path.exists(osmium_exe):
+    raise FileNotFoundError(f"osmium.exe introuvable :\n{osmium_exe}")
 
-def run_pipeline():
+os.environ["GDAL_DATA"] = os.path.join(conda_prefix, "Library", "share", "gdal")
+os.environ["PROJ_DATA"] = os.path.join(conda_prefix, "Library", "share", "proj")
+
+INPUT_PBF = "ile-de-france-internal.osh.pbf"
+SNAPSHOT, EXPORT_OSM, EXPORT_GEOJSON = "temp_snapshot.osm.pbf", "temp_export.osm.pbf", "temp_export.geojson"
+TERRITOIRES_FILE, COMMUNES_FILE, MGP_FILE = "territoires_mgp.geojson", "communes_arrondissements.geojson", "mgp.geojson"
+# L'identifiant de la relation peut être trouvé via le site osm.org, clic droit, "interroger les objets", "Objets englobant" 
+MGP_OSM = "r5814660"
+
+
+# -------------------------------------------------------------
+# Utilitaires
+# -------------------------------------------------------------
+def check_input():
+    if not os.path.exists(INPUT_PBF): raise FileNotFoundError(f"Fichier absent : {INPUT_PBF}")
+
+def cleanup():
+    for f in (SNAPSHOT, EXPORT_OSM, EXPORT_GEOJSON):
+        if os.path.exists(f):
+            try: os.remove(f)
+            except OSError: pass
+
+def ensure_columns(gdf):
+    for col in ["admin_level", "boundary", "name", "ref:FR:MGP"]:
+        if col not in gdf.columns: gdf[col] = None
+    return gdf
+
+# -------------------------------------------------------------
+# Pipeline principal
+# -------------------------------------------------------------
+def run_pipeline(target_date):
+    check_input()
+    date_iso = f"{target_date}T00:00:00Z"
+    print(f"\n{'='*60}\nExtraction au {target_date}\n{'='*60}")
     try:
-        # 1. Extraction globale de la zone MGP (Relation 5814660)
-        print("Extraction de la relation MGP...")
-        subprocess.run([osmium_exe, "time-filter", INPUT_PBF, "2026-06-01T00:00:00Z", "-o", SNAPSHOT], check=True)
-        subprocess.run([osmium_exe, "getid", SNAPSHOT, "r5814660", "-r", "-o", EXPORT_OSM, "--overwrite"], check=True)
+        subprocess.run([osmium_exe, "time-filter", INPUT_PBF, date_iso, "-o", SNAPSHOT, "--overwrite"], check=True)
+        subprocess.run([osmium_exe, "getid", SNAPSHOT, MGP_OSM, "-r", "-o", EXPORT_OSM, "--overwrite"], check=True)
         subprocess.run([osmium_exe, "export", EXPORT_OSM, "-o", EXPORT_GEOJSON, "--overwrite"], check=True)
-
-        # 2. Chargement via GeoPandas
+        
         gdf = gpd.read_file(EXPORT_GEOJSON)
+        if gdf.empty: raise ValueError("Le GeoJSON exporté est vide.")
+        if gdf.crs is None: gdf = gdf.set_crs(4326)
         
-        # FILTRE : Ne garder que les entités qui sont des polygones ou des multipolygones
-        # Cela élimine automatiquement toutes les rues, chemins et places (qui sont des LineString)
-        from shapely.geometry import Polygon, MultiPolygon
-        gdf = gdf[gdf.geometry.type.isin(['Polygon', 'MultiPolygon'])].copy()
-               
-        # --- A. Extraction des Territoires (T1 à T12) ---
-        territoires = gdf[gdf['ref:FR:MGP'].str.contains(r'^T\d+$', na=False)].copy()
-        territoires[['name', 'geometry']].to_file(TERRITOIRES_FILE, driver="GeoJSON")
-        print(f"✅ {TERRITOIRES_FILE} généré.")
-
-        # Génération du périmètre extérieur (MGP) ---
-        print("Génération du contour global MGP...")
-        # Dissout tous les territoires en une seule forme géométrique
-        mgp_contour = territoires.unary_union
+        gdf = ensure_columns(gdf)
+        gdf = gdf[gdf.geometry.geom_type.isin(["Polygon", "MultiPolygon"])].copy()
+        gdf["admin_level"] = pd.to_numeric(gdf["admin_level"], errors="coerce")
         
-        # On crée un nouveau GeoDataFrame pour ce contour unique
-        mgp_gdf = gpd.GeoDataFrame(
-            {'name': ['Métropole du Grand Paris']}, 
-            geometry=[mgp_contour], 
-            crs=territoires.crs
-        )
-        mgp_gdf.to_file("mgp.geojson", driver="GeoJSON")
-        print("✅ mgp.geojson généré (périmètre extérieur).")
-
-        # --- B. Extraction Communes / Arrondissements ---
-        # Critères :
-        # 1. admin_level 8 (communes) ET boundary=administrative, sauf Paris
-        # 2. OU admin_level 9 (arrondissements) ET (Saint-Denis, Pierrefitte, ou 'arrondissement' dans name)
+        # Territoires
+        territoires = gdf[gdf["ref:FR:MGP"].str.contains(r"^T\d+$", na=False)].copy()
+        if territoires.empty: raise ValueError("Aucun territoire MGP trouvé.")
+        territoires[["name", "geometry"]].to_file(TERRITOIRES_FILE, driver="GeoJSON")
+        print(f"✓ {TERRITOIRES_FILE}")
         
-        gdf['admin_level'] = pd.to_numeric(gdf['admin_level'], errors='coerce')
+        # Métropole
+        mgp = gpd.GeoDataFrame({"name": ["Métropole du Grand Paris"]}, geometry=[territoires.geometry.union_all()], crs=territoires.crs)
+        mgp.to_file(MGP_FILE, driver="GeoJSON")
+        print(f"✓ {MGP_FILE}")
         
-        cond_commune = (
-            (gdf['admin_level'] == 8) & 
-            (gdf['boundary'] == 'administrative') & 
-            (gdf['name'] != 'Paris')
-        )
+        # Communes
+        cond_communes = (gdf["admin_level"] == 8) & (gdf["boundary"] == "administrative") & (gdf["name"] != "Paris")
+        is_special = gdf["name"].isin(["Saint-Denis", "Pierrefitte-sur-Seine"])
+        is_arr = gdf["name"].str.contains("arrondissement", case=False, na=False)
+        communes = gdf[cond_communes | ((gdf["admin_level"] == 9) & (is_special | is_arr))].copy()
         
-        cond_arr = (
-            (gdf['admin_level'] == 9) & 
-            (
-                gdf['name'].isin(['Saint-Denis', 'Pierrefitte-sur-Seine']) | 
-                gdf['name'].str.contains('arrondissement', case=False, na=False)
-            )
-        )
+        if communes.empty: raise ValueError("Aucune commune trouvée.")
+        communes[["name", "geometry"]].to_file(COMMUNES_FILE, driver="GeoJSON")
+        print(f"✓ {COMMUNES_FILE}\n\nExtraction terminée avec succès.")
         
-        communes_gdf = gdf[cond_commune | cond_arr].copy()
-        communes_gdf[['name', 'geometry']].to_file(COMMUNES_FILE, driver="GeoJSON")
-        print(f"✅ {COMMUNES_FILE} généré.")
-
-    except Exception as e:
-        print(f"❌ Erreur : {e}")
+    except (subprocess.CalledProcessError, Exception) as e:
+        print(f"\nErreur :\n{e}")
     finally:
-        for f in [SNAPSHOT, EXPORT_OSM, EXPORT_GEOJSON]:
-            if os.path.exists(f):
-                os.remove(f)
+        cleanup()
 
-if __name__ == "__main__":
-    run_pipeline()
+# -------------------------------------------------------------
+# Interface Jupyter / Console
+# -------------------------------------------------------------
+if JUPYTER:
+    date_picker = widgets.DatePicker(description="Date cible :", value=datetime(datetime.now().year, 1, 1).date(), style={"description_width": "initial"}, layout=widgets.Layout(width="250px"))
+    launch_button = widgets.Button(description="Lancer l'extraction", icon="play", button_style="success", layout=widgets.Layout(width="220px"))
+    output_area = widgets.Output()
+
+    def on_button_clicked(_):
+        with output_area:
+            clear_output()
+            if date_picker.value is None: print("Veuillez sélectionner une date."); return
+            run_pipeline(date_picker.value.strftime("%Y-%m-%d"))
+    launch_button.on_click(on_button_clicked)
+    display(widgets.VBox([widgets.HTML("<h3>📅 Extraction territoires depuis OpenStreetMap</h3>"), date_picker, launch_button, output_area]))
+
+def console_mode():
+    default_date = f"{datetime.now().year}-01-01"
+    answer = input(f"Date cible (YYYY-MM-DD) [{default_date}] : ").strip() or default_date
+    try:
+        datetime.strptime(answer, "%Y-%m-%d")
+        run_pipeline(answer)
+    except ValueError: print("\nFormat invalide. Utilisez YYYY-MM-DD.")
+
+if __name__ == "__main__" and not JUPYTER:
+    console_mode()
